@@ -3,7 +3,8 @@ import { axiosInstance } from '../lib/axios';
 import { toast } from "react-hot-toast"
 import { io } from "socket.io-client"
 
-const BASE_URL=import.meta.env.MODE==="developmetn"?"http://localhost:5001/api":"/api"
+const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001/" : "/"
+
 export const useAuthStore = create((set, get) => ({  // set to change values inside and get is to access them inside file
     authUser: null,
     isSigningUp: false,
@@ -14,6 +15,7 @@ export const useAuthStore = create((set, get) => ({  // set to change values ins
     socket: null,
     checkauth: async () => {
         try {
+            console.log(BASE_URL)
             set({ isLoading: true })
             const response = await axiosInstance.get("/auth/check");
             set({ authUser: response.data.user });
@@ -92,31 +94,31 @@ export const useAuthStore = create((set, get) => ({  // set to change values ins
         }
     },
     connectSocket: () => {
-        const {authUser}=get()
-        if(!authUser || get().socket?.connected)  return console.log("No authUser");   // donot connect if user is not authorized and already connected
-        const socket=io(BASE_URL,{  // handshake used to pass headers and information 
-            query:{
-                userid:get().authUser._id
+        const { authUser } = get()
+        if (!authUser || get().socket?.connected) return console.log("No authUser");   // donot connect if user is not authorized and already connected
+        const socket = io(BASE_URL, {  // handshake used to pass headers and information 
+            query: {
+                userid: get().authUser._id
             }
         })  // connect to server socket from client
-        set({socket:socket})
+        set({ socket: socket })
         socket.connect()   // connects explicitly if not already connected 
 
         // after connecting to the socket we can listen to events
 
-        socket.on("getOnlineUsers",(userids)=>{  // listens to the event named getOnlineUsers and sent data can be accessed 
-            set({onlineUsers:userids})
+        socket.on("getOnlineUsers", (userids) => {  // listens to the event named getOnlineUsers and sent data can be accessed 
+            set({ onlineUsers: userids })
         })
 
     },
 
     disconnectSocket: () => {
-        const {socket}=get()
-        if(socket&& socket.connected){
+        const { socket } = get()
+        if (socket && socket.connected) {
             socket.disconnect()
             console.log("Socket Disconnected")
         }
-        set({socket:null})
+        set({ socket: null })
     },
 
 }))
